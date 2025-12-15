@@ -27,9 +27,7 @@ typedef struct block_header {
 } block_header;
 
 
-// ---------------------------------------------------------------------------
 // Global Heads
-// ---------------------------------------------------------------------------
 
 // First block in the *heap list*
 extern block_header* heap_head;

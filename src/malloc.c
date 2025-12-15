@@ -73,3 +73,77 @@ block_header* find_free_block(size_t size) {
 
     return NULL;  // No suitable block found
 }
+
+void* my_malloc(size_t size) {
+    if (size == 0) {
+        return NULL;
+    }
+
+    size = ALIGN(size);  // ensure alignment
+
+    // 1. Look for a free block in the free list
+    block_header* block = find_free_block(size);
+
+    // 2. If no free block is found, request more space
+    if (block == NULL) {
+        block = request_space(size);
+        if (block == NULL) {
+            return NULL; // sbrk failed
+        }
+    }
+
+    // 3. If block is larger than needed → split it
+    if (block->size >= size + sizeof(block_header) + ALIGNMENT) {
+        split_block(block, size);
+    }
+
+    // 4. Remove the block from the free list because it's now in use
+    remove_from_free_list(block);
+
+    // 5. Mark it used in the heap list
+    block->free = 0;
+
+    // 6. Return pointer to memory AFTER the block header
+    return (void*)((char*)block + sizeof(block_header));
+}
+
+void remove_from_free_list(block_header* block) {
+    if (block->prev_free) {
+        block->prev_free->next_free = block->next_free;
+    } else {
+        // Removing the head of the free list
+        free_head = block->next_free;
+    }
+
+    if (block->next_free) {
+        block->next_free->prev_free = block->prev_free;
+    }
+
+    block->next_free = NULL;
+    block->prev_free = NULL;
+}
+
+void split_block(block_header* block, size_t size) {
+    // new block begins right after allocated memory
+    char* block_start = (char*)block;
+    char* new_block_addr = block_start + sizeof(block_header) + size;
+
+    block_header* new_block = (block_header*) new_block_addr;
+
+    new_block->size = block->size - size - sizeof(block_header);
+    new_block->free = 1;
+
+    // Insert new_block into heap list
+    new_block->next = block->next;
+    new_block->prev = block;
+    if (block->next) {
+        block->next->prev = new_block;
+    }
+    block->next = new_block;
+
+    // Adjust original block size
+    block->size = size;
+
+    // Insert new block into free list
+    insert_into_free_list(new_block);
+}

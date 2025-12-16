@@ -71,8 +71,17 @@ void remove_from_free_list(block_header* block);
 // Split a block into used/free parts
 void split_block(block_header* block, size_t size);
 
+// Merge the current free block with the free block directly before it
+block_header* merge_with_prev(block_header* block);
+
+// Merge the current free block with the free block directly after it
+void merge_with_next(block_header* block);
+
+
 // Merge adjacent free blocks in the heap list
-void coalesce(block_header* block);
+block_header* coalesce(block_header* block);
+
+void print_heap();
 
 
 #endif // ALLOCATOR_H

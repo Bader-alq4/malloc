@@ -1,6 +1,7 @@
 #include <unistd.h> // sbrk()
 #include <string.h>  // memset
 #include "allocator.h"
+#include <stdio.h>
 
 block_header* heap_head = NULL;
 block_header* free_head = NULL;
@@ -107,21 +108,6 @@ void* my_malloc(size_t size) {
     return (void*)((char*)block + sizeof(block_header));
 }
 
-void remove_from_free_list(block_header* block) {
-    if (block->prev_free) {
-        block->prev_free->next_free = block->next_free;
-    } else {
-        // Removing the head of the free list
-        free_head = block->next_free;
-    }
-
-    if (block->next_free) {
-        block->next_free->prev_free = block->prev_free;
-    }
-
-    block->next_free = NULL;
-    block->prev_free = NULL;
-}
 
 void split_block(block_header* block, size_t size) {
     // new block begins right after allocated memory
